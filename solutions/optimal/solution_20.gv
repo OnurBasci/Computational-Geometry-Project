@@ -4,7 +4,7 @@ graph {
 	27 [fillcolor=red style=filled]
 	30 [fillcolor=red style=filled]
 	7 [style=filled]
-	3 [fillcolor=red style=filled]
+	3 [style=filled]
 	24 [fillcolor=red style=filled]
 	25 [style=filled]
 	4 [fillcolor=red style=filled]
