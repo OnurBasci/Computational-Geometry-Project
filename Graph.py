@@ -91,7 +91,6 @@ class Graph:
                     node = self.nodes[node_label]
                     node.color = "red"
                     self.dominating_set.add(node)
-        
 
     def add_node(self, node):
         """
