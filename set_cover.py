@@ -1,5 +1,11 @@
 from Graph import Graph
 import numpy as np
+from enum import Enum
+
+class SetCoverHeuristicCostType(Enum):
+    NbElementsAdded = 1,
+    Frequencies = 2,
+
 
 class Set:
     """
@@ -17,21 +23,28 @@ class Set:
         self.content = [n for n in graph.neighbors[node]]
         self.content.append(node)
 
-    def get_cost(self, cover_set):
+    def get_cost(self, cover_set, cost_type, node_frequencies):
         """
         Computes the score of the cost of adding the current set to the given cover set.
         The score is the number of elements that would be effectively added in the cover set
 
         Args:
             cover_set (set(str)): A set of node label
+            cost_type (SetCoverHeuristicCostType): The type of cost heuristic
+            node_frequencies (dict(str, float)): The frequency of each node
 
         Returns:
             int: The cost
         """
-        cost = len(self.content)
-        for label in cover_set:
-            if label in self.content:
-                cost -= 1
+        cost = 0.
+        if(cost_type == SetCoverHeuristicCostType.Frequencies):
+            cost = np.sum([(1. / node_frequencies[node]) for node in self.content])
+
+        elif(cost_type == SetCoverHeuristicCostType.NbElementsAdded):
+            cost = len(self.content)
+            for label in cover_set:
+                if label in self.content:
+                    cost -= 1.
         return cost
 
 
@@ -53,12 +66,14 @@ def create_sets(graph):
     return output
 
 
-def greedy_set_cover(sets):
+def greedy_set_cover(sets, cost_type = SetCoverHeuristicCostType.NbElementsAdded, node_frequencies = None):
     """
     Computes a greedy solution for the cover set problem
 
     Args:
         sets (list(Sets)): A list of Sets
+        cost_type (SetCoverHeuristicCostType): The type of cost heuristic
+        node_frequencies (dict(str, float)): The frequency of each node
 
     Returns:
         list(str): A list of covering sets represented by their labels
@@ -75,7 +90,7 @@ def greedy_set_cover(sets):
         best_set_index = 0
         for index in range(len(available_sets)):
             cur_set = available_sets[index]
-            cur_cost = cur_set.get_cost(cover_set)
+            cur_cost = cur_set.get_cost(cover_set, cost_type, node_frequencies)
             if(cur_cost > max_cost):
                 max_cost = cur_cost
                 best_set_index = index
@@ -94,6 +109,31 @@ def greedy_set_cover(sets):
     return output
 
 
+def create_node_frequencies(sets):
+    """
+    Computes the node frequencies in the sets
+
+    Args:
+        sets (list(Sets)): A list of Sets        
+
+    Returns:
+        node_frequencies (dict(str, float)): The frequency of each node
+    """
+    node_frequencies = {}
+    nb_total_nodes = 0
+    for cur_set in sets:
+        for node in cur_set.content:
+            if(node not in node_frequencies):
+                node_frequencies[node] = 1.
+            else:
+                node_frequencies[node] += 1.
+            nb_total_nodes += 1
+    for node in node_frequencies:
+        node_frequencies[node] /= nb_total_nodes
+    return node_frequencies
+
+
+
 if __name__ == "__main__":
     nb_nodes = [20, 50, 100, 150, 200, 250, 300]
 
@@ -102,6 +142,9 @@ if __name__ == "__main__":
 
     verbose = True
     render = True
+
+    cost_heuristic = SetCoverHeuristicCostType.NbElementsAdded
+    # cost_heuristic = SetCoverHeuristicCostType.Frequencies
 
     for nb_node in nb_nodes:
         if verbose:
@@ -123,7 +166,13 @@ if __name__ == "__main__":
 
         output_graph = Graph(file_path)
         output_sets = create_sets(output_graph)
-        output_sol = greedy_set_cover(output_sets)
+
+        if(cost_heuristic == SetCoverHeuristicCostType.NbElementsAdded):
+            output_sol = greedy_set_cover(output_sets, cost_type=cost_heuristic)
+        elif(cost_heuristic == SetCoverHeuristicCostType.Frequencies):
+            node_frequencies = create_node_frequencies(output_sets)
+            output_sol = greedy_set_cover(output_sets, cost_type=cost_heuristic, node_frequencies=node_frequencies)
+
         output_graph.add_dominating_set_from_list(output_sol)
         if verbose:
             print(f"Solution found: {len(output_sol)} vertices")
