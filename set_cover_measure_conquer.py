@@ -59,8 +59,8 @@ def minimum_set_cover(S, U):
 def minimum_set_cover_reduction_rule1(S, U):
     """
     Recursively computes the minimum set cover.
-    In this version of the MSC, if there is an element of frequency 1 we take the set that contains it directly since we know that,
-    it should be included
+    In this version of the MSC, if there is an element of frequency 1 with the size
+    of 1 and frequency of 1
     :param S: A set of subsets (set of frozensets).
     :param U: The universal set that needs to be covered (set).
     :return: The minimum set cover as a set of frozensets or None if no cover exists.
@@ -69,6 +69,19 @@ def minimum_set_cover_reduction_rule1(S, U):
     if len(S) == 0:
         return set() if len(U) == 0 else None
     
+    #check if there an element of frequency 1
+    counter = dict()
+    s_min = None
+    for s in S:
+        for e in s:
+            counter[e] = counter.get(e, 0) + 1 
+    for e in counter:
+        if counter[e] == 1:
+            R = frozenset({e})
+            S_rest = S - {R}
+            new_U = U - R
+            S_removed = {s - R for s in S_rest if len(s - R) > 0}
+            return minimum_set_cover_reduction_rule1(S_removed, new_U)
 
     # Select the set with maximum cardinality (largest subset)
     S_max = max(S, key=len)
@@ -83,7 +96,7 @@ def minimum_set_cover_reduction_rule1(S, U):
 
     # Case 1: Take S_max in the set cover
     new_U = U - S_max  # Remove covered elements from U
-    cover_with_S_max = minimum_set_cover(S_removed, new_U)
+    cover_with_S_max = minimum_set_cover_reduction_rule1(S_removed, new_U)
 
     if cover_with_S_max is not None:
         #get the original mapping from the minimum set
@@ -195,7 +208,7 @@ def test():
     #print(f"U: {U}")
     print(f"S: {S}")
 
-    solution = minimum_set_cover(S, U)
+    solution = minimum_set_cover_reduction_rule1(S, U)
     print(f"length of solution {len(solution)}")
     print("Minimum Set Cover:", solution)
 
@@ -208,12 +221,15 @@ def test():
     gv.render('set_cover_sol')
 
 if __name__ == "__main__":
+    #a = frozenset({5})
+    test()
+    """
     #graph_folder_path = "generated_graphs_increasing_edge"
     graph_folder_path = "generated_graphs_increasing_vertices"
     execution_times = test_complexity(minimum_set_cover, graph_folder_path)
     plot_execution_time(execution_times, save_name="execution_time_vertices.png", lower_bound=5, upper_bound=60)
     #print(execution_times)
-
+    """
     """file_path = "./generated_graphs_increasing_vertices/graph_n45_p_0.5.gr"
     g = Graph(file_path, sol_path=None)
     gv = g.to_graphviz()
