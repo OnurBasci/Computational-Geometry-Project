@@ -74,14 +74,21 @@ def minimum_set_cover_reduction_rule1(S, U):
     s_min = None
     for s in S:
         for e in s:
-            counter[e] = counter.get(e, 0) + 1 
+            counter[e] = counter.get(e, (0, False)) + (1, False) 
+        if len(s) == 1:
+            counter[e] = (counter[e][0], True)
     for e in counter:
-        if counter[e] == 1:
+        if counter[e][0] == 1 and counter[e][1]:
             R = frozenset({e})
+            print(f"R: {R}, S: {S}\n\n")
+            print(f"counter: {counter}\n")
             S_rest = S - {R}
+            assert(S_rest != S)
             new_U = U - R
             S_removed = {s - R for s in S_rest if len(s - R) > 0}
-            return minimum_set_cover_reduction_rule1(S_removed, new_U)
+            cover = minimum_set_cover_reduction_rule1(S_removed, new_U)
+            cover.add(R)
+            return cover
 
     # Select the set with maximum cardinality (largest subset)
     S_max = max(S, key=len)
@@ -199,7 +206,8 @@ def test():
     solution = trivial_set_cover(S, U)
     print("Minimum Set Cover:", solution)"""
 
-    file_path = "tests/bremen_subgraph_20.gr"
+    # file_path = "tests/bremen_subgraph_50.gr"
+    file_path = "generated_graphs_increasing_edge/graph_n20_p_0.22.gr"
 
     graph = Graph(file_path, sol_path=None)
 
@@ -223,13 +231,13 @@ def test():
 if __name__ == "__main__":
     #a = frozenset({5})
     test()
-    """
+    # """
     #graph_folder_path = "generated_graphs_increasing_edge"
     graph_folder_path = "generated_graphs_increasing_vertices"
-    execution_times = test_complexity(minimum_set_cover, graph_folder_path)
+    execution_times = test_complexity(minimum_set_cover_reduction_rule1, graph_folder_path)
     plot_execution_time(execution_times, save_name="execution_time_vertices.png", lower_bound=5, upper_bound=60)
-    #print(execution_times)
-    """
+    print(execution_times)
+    # """
     """file_path = "./generated_graphs_increasing_vertices/graph_n45_p_0.5.gr"
     g = Graph(file_path, sol_path=None)
     gv = g.to_graphviz()
