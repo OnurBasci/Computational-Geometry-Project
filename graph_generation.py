@@ -118,12 +118,14 @@ def genereate_increasing_vertex_graph(edge_prob=0.5, lower_bound = 5, upper_boun
     step = 5
     n = lower_bound_vertex
     p = edge_prob
+    i = 0
     while n <= upper_bound_vertex:
+        i+=1
         graph = Graph_Generator(n, 5, p)
         graph.generate_erdos_renyi_graph()
 
         #save the file
-        file_path = "generated_graphs_increasing_vertices/graph_n" + str(n) + "_p_" + str(p) + ".gr"
+        file_path = f"generated_graphs_increasing_vertices/graph_n_{n:03}_p_{p}.gr"
         graph.write_gr_file(file_path)
         n += step
 
