@@ -130,6 +130,93 @@ def minimum_set_cover_reduction_rule1(S, U):
     
     return smallest_set_cover
 
+def minimum_set_cover_reduction_rule3(S, U):
+    """
+    Recursively computes the minimum set cover.
+    In this version of the MSC, if there is an element of frequency 1 with the size
+    of 1 and frequency of 1
+    :param S: A set of subsets (set of frozensets).
+    :param U: The universal set that needs to be covered (set).
+    :return: The minimum set cover as a set of frozensets or None if no cover exists.
+    """
+    # Base case: If no more subsets are left
+    if len(S) == 0:
+        return set() if len(U) == 0 else None
+    
+    # Reduction Rule 1
+    counter = dict()
+    for s in S:
+        for e in s:
+            counter[e] = counter.get(e, (0, s))
+            counter[e] = (counter[e][0] + 1, s)
+    for e in counter:
+        if counter[e][0] == 1:
+            R = counter[e][1]
+            new_U = U - R
+            S_rest = S - {R}
+            S_removed = {s - R for s in S_rest if len(s - R) > 0}
+            # print(f"\n\ne: {e}, R: {R}\nS: {S}\ncounter: {counter}\nS_rest: {S_rest}\nS_removed: {S_removed}\nnew_U: {new_U}\n\n")
+
+            s_map = dict()
+            for s in S_rest:
+                removed = s - R
+                if len(removed) > 0:
+                    s_map[removed] = s
+
+            cover = minimum_set_cover_reduction_rule3(S_removed, new_U)
+
+            if cover is not None:
+                #get the original mapping from the minimum set
+                cover = {frozenset(s_map[s]) for s in cover}
+                cover.add(R)
+                return cover
+            else:
+                return {R}
+
+    # Select the set with maximum cardinality (largest subset)
+    S_max = max(S, key=len)
+    S_rest = S - {S_max}  # Remove selected subset from S
+    S_removed = {s - S_max for s in S_rest if len(s - S_max) > 0} #Each element that are in S_max is removed from S
+
+    #reduction rule number 3
+    if len(S_max) <= 1:
+        return set(frozenset(e) in U)
+    
+    #we need a mappint from s_removed to S_rest to get the original mapping
+    s_map = dict()
+    for s in S_rest:
+        removed = s - S_max
+        if len(removed) > 0:
+            s_map[removed] = s
+
+    # Case 1: Take S_max in the set cover
+    new_U = U - S_max  # Remove covered elements from U
+    cover_with_S_max = minimum_set_cover_reduction_rule3(S_removed, new_U)
+
+    if cover_with_S_max is not None:
+        #get the original mapping from the minimum set
+        cover_with_S_max = {frozenset(s_map[s]) for s in cover_with_S_max}
+        cover_with_S_max.add(S_max)
+    else:
+        cover_with_S_max = {S_max}
+    
+    # Case 2: Do not take S_max in the set cover
+    cover_without_S_max = minimum_set_cover_reduction_rule3(S_rest, U)
+    
+    # Return None if both cover sets are None
+    if cover_without_S_max is None and cover_with_S_max is None:
+        return None
+
+    # Take the smallest between cover_with_S_max and cover_without_S_max
+    if cover_with_S_max is None:
+        smallest_set_cover = cover_without_S_max
+    elif cover_without_S_max is None:
+        smallest_set_cover = cover_with_S_max
+    else:
+        smallest_set_cover = cover_with_S_max if len(cover_with_S_max) < len(cover_without_S_max) else cover_without_S_max
+    
+    return smallest_set_cover
+
 
 def graph_to_set_cover(graph):
     """
@@ -209,8 +296,8 @@ def test():
     solution = trivial_set_cover(S, U)
     print("Minimum Set Cover:", solution)"""
 
-    #file_path = "tests/bremen_subgraph_20.gr"
-    file_path = "generated_graphs_increasing_vertices/graph_n55_p_0.5.gr"
+    file_path = "tests/bremen_subgraph_20.gr"
+    #file_path = "generated_graphs_increasing_vertices/graph_n55_p_0.5.gr"
 
     graph = Graph(file_path, sol_path=None)
 
@@ -219,7 +306,7 @@ def test():
     #print(f"U: {U}")
     print(f"S: {S}")
 
-    solution = minimum_set_cover_reduction_rule1(S, U)
+    solution = minimum_set_cover_reduction_rule3(S, U)
     print(f"length of solution {len(solution)}")
     print("Minimum Set Cover:", solution)
 
@@ -238,7 +325,7 @@ if __name__ == "__main__":
     #graph_folder_path = "generated_graphs_increasing_edge"
     
     graph_folder_path = "generated_graphs_increasing_vertices"
-    execution_times = test_complexity(minimum_set_cover_reduction_rule1, graph_folder_path)
+    execution_times = test_complexity(minimum_set_cover_reduction_rule3, graph_folder_path)
     plot_execution_time(execution_times, save_name="execution_time_vertices.png", lower_bound=5, upper_bound=60)
     print(execution_times)
     # """
