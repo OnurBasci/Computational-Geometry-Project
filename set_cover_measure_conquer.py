@@ -456,18 +456,29 @@ def minimum_set_cover_reduction_rule7(S, U):
     
     #reduction rule 7
     for R in S:
-        if all(counter[e][0] == 2 for e in R):
+        r2_elements = {e for e in R if counter[e][0] == 2}
+        if len(r2_elements) > 0:
             other_sets = set()
             for e in R:
-                for s in sets_containing[e]:
-                    if s != R:
-                        other_sets.add(s)
+                if counter[e][0] == 2:
+                    for s in sets_containing[e]:
+                        if s != R:
+                            other_sets.add(s)
             other_elements = set().union(*other_sets) - set(R)
-            if len(other_elements) < len(R):
+            if len(other_elements) < len(r2_elements):
                 new_U = U - R
                 S_rest = S - {R}
-                cover = minimum_set_cover_reduction_rule7(S_rest, new_U)
+                S_removed = {s - R for s in S_rest if len(s - R) > 0}
+
+                s_map = dict()
+                for s in S_rest:
+                    removed = s - R
+                    if len(removed) > 0:
+                        s_map[removed] = s
+                
+                cover = minimum_set_cover_reduction_rule7(S_removed, new_U)
                 if cover is not None:
+                    cover = {frozenset(s_map[s]) for s in cover}
                     cover.add(R)
                     return cover
                 else:
@@ -587,7 +598,7 @@ def test():
     solution = trivial_set_cover(S, U)
     print("Minimum Set Cover:", solution)"""
 
-    file_path = "tests/bremen_subgraph_20.gr"
+    file_path = "tests/bremen_subgraph_50.gr"
     #file_path = "generated_graphs_increasing_vertices/graph_n_025_p_0.5.gr"
     #file_path = "generated_graphs_increasing_edge/graph_n20_p_0.24.gr"
 
