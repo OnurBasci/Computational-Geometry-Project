@@ -252,11 +252,13 @@ def minimum_set_cover_reduction_rule5(S, U):
                     s_map[removed] = s
 
             cover = minimum_set_cover_reduction_rule5(S_removed, new_U)
+            #print(f"cover prev {cover}")
 
             if cover is not None:
                 #get the original mapping from the minimum set
                 cover = {frozenset(s_map[s]) for s in cover}
                 cover.add(R)
+                #print(f"mapped cover {cover}")
                 return cover
             else:
                 return {R}
@@ -281,7 +283,7 @@ def minimum_set_cover_reduction_rule5(S, U):
     S_removed = {s - S_max for s in S_rest if len(s - S_max) > 0} #Each element that are in S_max is removed from S
     
     #reduction rule number 5
-    if len(S_max) == 2:
+    if len(S_max) <= 2:
         #use nx library to compute maximum matchnig in polynomial time
         G = nx.Graph()
 
@@ -298,18 +300,21 @@ def minimum_set_cover_reduction_rule5(S, U):
         #print(f"matching {matching}")
 
         cover = set()
+        matched_vertices = set()
         #add edges of the maximum edges
         for e1, e2 in matching:
             #print(f"e1 {e1} e2 {e2}")
             cover.add(frozenset({e1, e2}))
+            matched_vertices.update([e1, e2])
 
-        #add sets of size and frequency 1 since they are not in the max edges
-        #I am not suer if this part is necessary to check
-        for e in counter:
-            if counter[e][0] == 1:
-                #print(f"single sets {counter[e][1]}")
-                cover.add(counter[e][1])
-        
+        #add also the sets that contains the uncovered vertex
+        unmatched = U - matched_vertices
+        for e in unmatched:
+            for s in S:
+                if e in s:
+                    cover.add(s)
+                    break
+
         return cover
 
     #we need a mappint from s_removed to S_rest to get the original mapping
@@ -426,16 +431,14 @@ def test():
     print("Minimum Set Cover:", solution)"""
 
     file_path = "tests/bremen_subgraph_20.gr"
-    #file_path = "generated_graphs_increasing_vertices/graph_n55_p_0.5.gr"
+    #file_path = "generated_graphs_increasing_vertices/graph_n_025_p_0.5.gr"
+    #file_path = "generated_graphs_increasing_edge/graph_n20_p_0.24.gr"
 
     graph = Graph(file_path, sol_path=None)
 
     U, S, node_map = graph_to_set_cover(graph)
-    
-    #print(f"U: {U}")
-    print(f"S: {S}")
 
-    solution = minimum_set_cover_reduction_rule3(S, U)
+    solution = minimum_set_cover_reduction_rule5(S, U)
     print(f"length of solution {len(solution)}")
     print("Minimum Set Cover:", solution)
 
@@ -445,7 +448,7 @@ def test():
     graph.add_dominating_set_from_list(dominating_set)
 
     gv = graph.to_graphviz()
-    gv.render('set_cover_sol')
+    gv.render('set_cover_sol2')
 
 if __name__ == "__main__":
     #a = frozenset({5})
