@@ -60,7 +60,7 @@ def minimum_set_cover_reduction_rules(S, U, rules=list(range(1, 8))):
                     if len(removed) > 0:
                         s_map[removed] = s
 
-                cover = minimum_set_cover_reduction_rules(S_removed, new_U)
+                cover = minimum_set_cover_reduction_rules(S_removed, new_U, rules)
 
                 if cover is not None:
                     #get the original mapping from the minimum set
@@ -81,7 +81,7 @@ def minimum_set_cover_reduction_rules(S, U, rules=list(range(1, 8))):
                             is_R_a_Q_subset = False
                             break
                     if is_R_a_Q_subset:
-                        return minimum_set_cover_reduction_rules(S - {R}, U)
+                        return minimum_set_cover_reduction_rules(S - {R}, U, rules)
 
     # Reduction Rule 5
     if rules_dict[5]:
@@ -107,7 +107,7 @@ def minimum_set_cover_reduction_rules(S, U, rules=list(range(1, 8))):
                 if len(removed) > 0:
                     s_map[removed] = s
             S_removed = {s - removed_elements for s in S if len(s - removed_elements) > 0}
-            cover = minimum_set_cover_reduction_rules(S_removed, new_U)
+            cover = minimum_set_cover_reduction_rules(S_removed, new_U, rules)
             if cover is not None:
                 cover = {frozenset(s_map[s]) for s in cover}
                 return cover
@@ -138,7 +138,7 @@ def minimum_set_cover_reduction_rules(S, U, rules=list(range(1, 8))):
                         if len(removed) > 0:
                             s_map[removed] = s
                     
-                    cover = minimum_set_cover_reduction_rules(S_removed, new_U)
+                    cover = minimum_set_cover_reduction_rules(S_removed, new_U, rules)
                     if cover is not None:
                         cover = {frozenset(s_map[s]) for s in cover}
                         cover.add(R)
@@ -235,7 +235,7 @@ def minimum_set_cover_reduction_rules(S, U, rules=list(range(1, 8))):
 
     # Case 1: Take S_max in the set cover
     new_U = U - S_max  # Remove covered elements from U
-    cover_with_S_max = minimum_set_cover_reduction_rules(S_removed, new_U)
+    cover_with_S_max = minimum_set_cover_reduction_rules(S_removed, new_U, rules)
 
     if cover_with_S_max is not None:
         #get the original mapping from the minimum set
@@ -245,7 +245,7 @@ def minimum_set_cover_reduction_rules(S, U, rules=list(range(1, 8))):
         cover_with_S_max = {S_max}
     
     # Case 2: Do not take S_max in the set cover
-    cover_without_S_max = minimum_set_cover_reduction_rules(S_rest, U)
+    cover_without_S_max = minimum_set_cover_reduction_rules(S_rest, U, rules)
     
     # Return None if both cover sets are None
     if cover_without_S_max is None and cover_with_S_max is None:
