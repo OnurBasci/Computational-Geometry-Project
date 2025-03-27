@@ -32,18 +32,19 @@ def minimum_set_cover_reduction_rules(S, U, rules=list(range(1, 8))):
     S_max = max(S, key=len)
     
     # Reduction Rule 2
-    if(len(S_max) <= 1):
-        return {frozenset({e}) for e in U}
-    
-    counter = dict()
-    sets_containing = dict()
-    for s in S:
-        for e in s:
-            if e not in counter:
-                counter[e] = (0,s)
-                sets_containing[e] = set()
-            counter[e] = (counter[e][0]+1, s)
-            sets_containing[e].add(s)
+    if rules_dict[2]:
+        if(len(S_max) <= 1):
+            return {frozenset({e}) for e in U}
+        
+        counter = dict()
+        sets_containing = dict()
+        for s in S:
+            for e in s:
+                if e not in counter:
+                    counter[e] = (0,s)
+                    sets_containing[e] = set()
+                counter[e] = (counter[e][0]+1, s)
+                sets_containing[e].add(s)
 
     # Reduction Rule 1
     if rules_dict[1]:
