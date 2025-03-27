@@ -152,14 +152,15 @@ class Graph:
         for i,j in edges:
             g.edge(i,j)
         return g
-    
 
-if __name__ == "__main__":
-    file_path = "tests/bremen_subgraph_20.gr"
-    sol_path = "tests/bremen_subgraph_20.sol"
+    def to_sol(self, path):
+        """
+        Creates a solution file formated for the PACE challenge
 
-    graph = Graph(file_path)
-
-    gv = graph.to_graphviz()
-
-    gv.render('test_graph')
+        Args:
+            path (str): Path to the output file
+        """
+        with open(path, 'w') as file:
+            file.write(f"{len(self.dominating_set)}\n")
+            for node in self.dominating_set:
+                file.write(f"{node.label}\n")

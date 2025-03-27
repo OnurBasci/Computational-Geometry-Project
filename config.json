@@ -1,0 +1,10 @@
+{
+    "input_file": "testGraphs/bremen_subgraph_20.gr",
+    "save_sol": true,
+    "sol_file": "solution_output.sol",
+    "method": "exact_cover_set",
+    "reduction_rules": [1, 2, 3, 4, 5, 6, 7],
+    "verbose": true,
+    "render": true,
+    "render_file": "solution_output.pdf"
+}

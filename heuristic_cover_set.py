@@ -1,5 +1,8 @@
-from Graph import Graph
+from graph import Graph
 import numpy as np
+import json
+import argparse
+import sys
 
 class Set:
     """
@@ -94,43 +97,17 @@ def greedy_set_cover(sets):
     return output
 
 
-if __name__ == "__main__":
-    nb_nodes = [20, 50, 100, 150, 200, 250, 300]
+def solve(graph, config):
+    """
+    Solves the dominating set problem for the given graph using an approximated greedy method.
 
-    test_directory = "tests"
-    sols_directory = "solutions"
+    Args:
+        graph (Graph): The input graph to solve.
+        config (dict): Configuration dictionary (not used in this implementation).
 
-    verbose = True
-    render = True
-
-    for nb_node in nb_nodes:
-        if verbose:
-            print(f"Begin n = {nb_node} nodes...")
-
-        file_path = f"{test_directory}/bremen_subgraph_{nb_node}.gr"
-        sol_path = f"{test_directory}/bremen_subgraph_{nb_node}.sol"
-
-        # Optimal graph
-        optimal_graph = Graph(file_path, sol_path)
-        optimal_sol = list(optimal_graph.dominating_set)
-        if verbose:
-            print(f"Optimal solution: {len(optimal_sol)} vertices")
-
-        gv_optimal = optimal_graph.to_graphviz()
-        if render:
-            gv_optimal.render(f"{sols_directory}/optimal/solution_{nb_node}.gv")
-
-
-        output_graph = Graph(file_path)
-        output_sets = create_sets(output_graph)
-        output_sol = greedy_set_cover(output_sets)
-        output_graph.add_dominating_set_from_list(output_sol)
-        if verbose:
-            print(f"Solution found: {len(output_sol)} vertices")
-
-        gv_outputs = output_graph.to_graphviz()
-        if render:
-            gv_outputs.render(f"{sols_directory}/cover_set/solution_{nb_node}.gv")
-
-        if verbose:
-            print(f"")
+    Returns:
+        Graph: The graph with the dominating set added and colored.
+    """
+    output_sets = create_sets(graph)
+    output_sol = greedy_set_cover(output_sets)
+    graph.add_dominating_set_from_list(output_sol)

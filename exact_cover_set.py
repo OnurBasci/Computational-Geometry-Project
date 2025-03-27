@@ -1,25 +1,24 @@
 import argparse
+import json
+import sys
 import os
 import time
 import matplotlib.pyplot as plt
 import numpy as np
 import networkx as nx
-from Graph import Graph
-
-def parse_arguments():
-    parser = argparse.ArgumentParser(description="Minimum Set Cover with Reduction Rules")
-    
-    parser.add_argument("-i", "--input", required=True, help="Path to input .gr graph file")
-    parser.add_argument("-o", "--output", default="set_cover_solution.pdf", help="Path to output PDF file")
-    parser.add_argument("-r", "--rules", nargs="*", type=int, choices=range(1, 8), default=list(range(1, 8)),
-                        help="List of reduction rules to apply (1-7). Default is all rules.")
-    
-    return parser.parse_args()
-
+from graph import Graph
 
 def minimum_set_cover_reduction_rules(S, U, rules=list(range(1, 8))):
     """
-    Recursively computes the minimum set cover using reduction rules
+    Recursively computes the minimum set cover using various reduction rules.
+
+    Args:
+        S (set): A collection of sets to cover the universe
+        U (set): The universe of elements to be covered
+        rules (list, optional): List of reduction rules to apply. Defaults to all rules.
+
+    Returns:
+        set: A minimal set cover, or None if no valid cover exists
     """
     # Convert rules list to dictionary for quick lookup
     rules_dict = {i: (i in rules) for i in range(1, 8)}
@@ -264,11 +263,16 @@ def minimum_set_cover_reduction_rules(S, U, rules=list(range(1, 8))):
 
 def graph_to_set_cover(graph):
     """
-    Transforma a graph to a set cover structure
-    graph: an instance of Graph data structure
-    S: List of sets
-    U: univers
-    node_mapping: dictionary that maps to set from node
+    Transforms a graph data structure into a set cover problem representation.
+
+    Args:
+        graph (Graph): Input graph to be transformed
+
+    Returns:
+        tuple: A 3-tuple containing:
+            - U (set): Universe of elements
+            - S (set): Collection of sets
+            - node_mapping (dict): Mapping between sets and original nodes
     """
     g = graph.neighbors
 
@@ -289,127 +293,25 @@ def graph_to_set_cover(graph):
 
 
 
-def main():
-    args = parse_arguments()
-    
-    # Load Graph
-    graph = Graph(args.input, sol_path=None)
+def solve(graph, config):
+    """
+    Solves the dominating set problem for the given graph using a cover set reduction.
+
+    Args:
+        graph (Graph): The input graph to solve.
+        config (dict): Configuration dictionary.
+
+    Returns:
+        Graph: The graph with the dominating set added and colored.
+    """
+    # Exact method using set cover reduction rules
     U, S, node_map = graph_to_set_cover(graph)
     
-    # Solve Set Cover Problem
-    solution = minimum_set_cover_reduction_rules(S, U, args.rules)
-    
-    print(f"Minimum Set Cover Size: {len(solution)}")
-    print("Cover Sets:", solution)
+    # Apply selected reduction rules
+    rules = config.get('reduction_rules', list(range(1, 8)))
+    solution = minimum_set_cover_reduction_rules(S, U, rules)
     
     # Convert solution to a dominating set
     dominating_set = [node_map[frozenset(s)] for s in solution]
     graph.add_dominating_set_from_list(dominating_set)
-    
-    # Generate PDF Output
-    gv = graph.to_graphviz()
-    gv.render(args.output.replace(".pdf", ""))
-    print(f"Output saved to {args.output}")
-
-if __name__ == "__main__":
-    main()
-
-
-
-
-
-# def test_complexity(solver, graph_folder_path):
-#     """
-#     solver: the function that solves the set cover
-#     """
-
-#     folder_path = graph_folder_path
-#     execution_times = []
-#     for file_name in sorted(os.listdir(folder_path)):
-#         file_path = os.path.join(folder_path, file_name)
-#         if os.path.isfile(file_path): 
-#             print(file_name)
-#             graph = Graph(file_path, sol_path=None)
-#             U, S, node_map = graph_to_set_cover(graph)
-
-#             time_before = time.time()
-#             solution = solver(S, U)
-#             time_after = time.time()
-#             print(f"length of solution {len(solution)}")
-#             dt = time_after - time_before
-#             execution_times.append(dt)
-#             print(f"time passed to solve {dt}")
-#             print("Minimum Set Cover:", solution)
-        
-#     return execution_times
-
-
-# def plot_execution_time(execution_times, save_name = "execution time", lower_bound = 5, upper_bound = 40):
-#     """
-#     execution times: a list containing execution times
-#     """
-#     x_values = np.linspace(lower_bound, upper_bound, len(execution_times))
-
-#     plt.plot(x_values, execution_times)
-#     plt.title("Execution time over edge probability")
-#     plt.ylabel("execution time")
-#     plt.savefig(save_name, format='png')
-
-# def test():
-#     # Example Usage
-
-#     """S = {
-#         frozenset({1, 2, 3}),
-#         frozenset({2, 4}),
-#         frozenset({3, 5}),
-#         frozenset({4, 5, 6}),
-#         frozenset({6})
-#     }
-#     U = {1, 2, 3, 4, 5, 6}
-
-
-#     solution = trivial_set_cover(S, U)
-#     print("Minimum Set Cover:", solution)"""
-
-#     file_path = "tests/bremen_subgraph_20.gr"
-#     # file_path = "generated_graphs_increasing_vertices/graph_n55_p_0.5.gr"
-
-#     graph = Graph(file_path, sol_path=None)
-
-#     U, S, node_map = graph_to_set_cover(graph)
-    
-#     #print(f"U: {U}")
-#     print(f"S: {S}")
-
-#     # solution = minimum_set_cover(S, U)
-#     rules = [1, 2, 3, 4, 5, 6, 7, 8]
-#     solution = minimum_set_cover_reduction_rules(S, U, rules)
-#     print(f"length of solution {len(solution)}")
-#     print("Minimum Set Cover:", solution)
-
-#     dominating_set = [node_map[frozenset(s)] for s in solution]
-#     print(f"dominating set is {dominating_set}")
-
-#     graph.add_dominating_set_from_list(dominating_set)
-
-#     gv = graph.to_graphviz()
-#     gv.render('set_cover_sol')
-
-
-# if __name__ == "__main__":
-#     #a = frozenset({5})
-#     # test()
-#     # """
-#     #graph_folder_path = "generated_graphs_increasing_edge"
-    
-#     graph_folder_path = "generated_graphs_increasing_vertices"
-#     # execution_times = test_complexity(minimum_set_cover, graph_folder_path)
-#     execution_times = test_complexity(minimum_set_cover_reduction_rules, graph_folder_path)
-#     plot_execution_time(execution_times, save_name="execution_time_vertices.png", lower_bound=5, upper_bound=60)
-#     print(execution_times)
-
-#     # """
-#     """file_path = "./generated_graphs_increasing_vertices/graph_n55_p_0.5.gr"
-#     g = Graph(file_path, sol_path=None)
-#     gv = g.to_graphviz()
-#     gv.render('test')"""
+    return graph
